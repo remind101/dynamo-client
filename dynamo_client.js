@@ -40,6 +40,13 @@ function Database(region, credentials) {
   this.events = new EventEmitter();
 }
 
+// The following events are emitted:
+//
+// * request.error, errObject
+// * request.retry, errName
+// * request.failure, errName
+// * request.consumedcapacity, { type, table, consumed }
+// * request.time, { type, time }
 Database.prototype.emit = function(name, data) {
   return this.events.emit(name, data);
 }
