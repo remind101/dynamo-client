@@ -75,8 +75,12 @@ Database.prototype.request = function(target, data, cb) {
         )) {
           self.emit('request.retry', err.name);
           setTimeout(retry, 50 << i, database, i + 1)
+        } else if (i < Request.prototype.maxConnRetries &&
+              err.code &&
+              ['ECONNRESET', 'EADDRNOTAVAIL'].indexOf(err.code) > -1) {
+          setTimeout(retry, 5 << i, database, i + 1)
         } else {
-          self.emit('request.failure', err.name || "unknown");
+          self.emit('request.failure', err.name || err.code || "unknown");
           cb(err)
         }
       } else {
@@ -116,6 +120,7 @@ function Request(opts, target, data) {
   this.method      = Request.prototype.method
   this.path        = Request.prototype.path
   this.maxRetries  = Request.prototype.maxRetries
+  this.maxConnRetries = Request.prototype.maxConnRetries
   this.contentType = Request.prototype.contentType
 
   headers["Host"] = this.host
@@ -129,6 +134,7 @@ function Request(opts, target, data) {
 Request.prototype.method      = "POST"
 Request.prototype.path        = "/"
 Request.prototype.maxRetries  = 10
+Request.prototype.maxConnRetries  = 2
 Request.prototype.contentType = "application/x-amz-json-1.0"
 
 Request.prototype.send = function(cb) {
